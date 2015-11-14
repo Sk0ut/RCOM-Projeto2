@@ -36,9 +36,9 @@ int getIpAdress(char* server_addr, char* buf){
     strcpy(buf, inet_ntoa(*((struct in_addr *)h->h_addr)));
 
     #ifdef DEBUG
-    printf("\nServer info:\n");
-    printf("Host name  : %s\n", h->h_name);
-    printf("IP Address : %s\n\n", buf);
+    printf("\nDEBUG: Server info:\n");
+    printf("DEBUG: Host name  : %s\n", h->h_name);
+    printf("DEBUG: IP Address : %s\n\n", buf);
     #endif
 
     return 0;
@@ -67,7 +67,7 @@ int ftp_connect(ftp_t* ftp){
 	struct	sockaddr_in server_addr;
 	
 	#ifdef DEBUG
-	printf("Starting service handling\n");
+	printf("DEBUG: Starting service handling\n");
 	#endif
 
 	/*server address handling*/
@@ -77,7 +77,7 @@ int ftp_connect(ftp_t* ftp){
 	server_addr.sin_port = htons(SERVER_PORT);		/*server TCP port must be network byte ordered */
     
     #ifdef DEBUG
-	printf("Finished service handling\n");
+	printf("DEBUG: Finished service handling\n");
 	#endif
 
 	/*open an TCP socket*/
@@ -89,7 +89,7 @@ int ftp_connect(ftp_t* ftp){
     ftp->socketfd = sockfd;
 
     #ifdef DEBUG
-    printf("Finished opening TCP Socket \n");
+    printf("DEBUG: Finished opening TCP Socket \n");
     #endif
 	/*connect to the server*/
     	if(connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
@@ -101,7 +101,7 @@ int ftp_connect(ftp_t* ftp){
 	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
    	
    	#ifdef DEBUG
-   	printf("Finished connecting to the server\n");
+   	printf("DEBUG: Finished connecting to the server\n");
    	#endif
 
    	/*send a string to the server*/
@@ -111,6 +111,10 @@ int ftp_connect(ftp_t* ftp){
 }
 
 int ftp_send_command(ftp_t* ftp, char* command, int size){
+	#ifdef DEBUG
+	printf("DEBUG: Sending command %s", command);
+	#endif
+
 	int bytesSent = write(ftp->socketfd, command, size);
 
 	if(bytesSent <= 0){
@@ -124,7 +128,8 @@ int ftp_send_command(ftp_t* ftp, char* command, int size){
 	}
 
 	#ifdef DEBUG
-		printf("Sent command \"%s\", %d bytes written\n", command, bytesSent);
+		command[size-1] = 0;
+		printf("DEBUG: Sent command %s, %d bytes written\n", command, bytesSent);
 	#endif
 
 	return 0;
@@ -134,7 +139,7 @@ int ftp_read_answer(ftp_t* ftp, char* answer, int size){
 	int bytesRead;
 	memset(answer, 0, size);
 	bytesRead = read(ftp->socketfd, answer, size);
-	printf("Answer: %s\n", answer);
+	printf("%s", answer);
 	return 0;
 }
 
@@ -143,11 +148,11 @@ int ftp_login_host(ftp_t* ftp){
 	char command[4 + strlen(ftp->username)];
 	char answer[MAX_STRING_SIZE];
 
-	sprintf(command,"%s %s", "user", ftp->username);
+	sprintf(command,"%s %s\n", "user", ftp->username);
 	ftp_send_command(ftp, command, strlen(command));
 	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
 
-	sprintf(command,"%s %s", "pass", ftp->password);
+	sprintf(command,"%s %s\n", "pass", ftp->password);
 	ftp_send_command(ftp, command, strlen(command));
 	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
 	return 0;
