@@ -96,6 +96,9 @@ int ftp_connect(ftp_t* ftp){
         	perror("connect()");
 		return -1;
 	}
+
+	char answer[MAX_STRING_SIZE];
+	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
    	
    	#ifdef DEBUG
    	printf("Finished connecting to the server\n");
@@ -139,8 +142,6 @@ int ftp_login_host(ftp_t* ftp){
 
 	char command[4 + strlen(ftp->username)];
 	char answer[MAX_STRING_SIZE];
-
-	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
 
 	sprintf(command,"%s %s", "user", ftp->username);
 	ftp_send_command(ftp, command, strlen(command));
