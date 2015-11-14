@@ -16,6 +16,12 @@
 #define SERVER_PORT 21 /* FTP Port */
 #define DEBUG
 
+/* TODO: Isto vai muito provavelmente ser passado para um .h */
+typedef struct {
+	char server_adress[15]; //NNN.NNN.NNN.NNN
+	int socketfd;
+} ftp_t;
+
 int getIpAdress(char* server_addr, char* buf){
 	struct hostent *h;
 
@@ -33,43 +39,55 @@ int getIpAdress(char* server_addr, char* buf){
     return 0;
 }
 
-int ftp_connect(char* server){
-	int	sockfd;
-	struct	sockaddr_in server_addr;
+ftp_t* ftp_init(char* server){
+	
+	ftp_t* ftp = malloc(sizeof(ftp_t));
+	memset(ftp, 0, sizeof(ftp_t));
+	char server_adress[15];
 
-	char server_adress[16];
 	if(getIpAdress(server, server_adress) < 0){
 		printf("Error while resolving adress %s\n", server);
-		return 1;
+		return NULL;
 	}
+
+	strcpy(ftp->server_adress, server_adress);
+
+	return ftp;
+}
+
+int ftp_connect(ftp_t* ftp){
+	int	sockfd;
+	struct	sockaddr_in server_addr;
 	
 	#ifdef DEBUG
 	printf("Starting service handling\n");
 	#endif
+
 	/*server address handling*/
 	memset((char*)&server_addr,0,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(server_adress);	/*32 bit Internet address network byte ordered*/
+	server_addr.sin_addr.s_addr = inet_addr(ftp->server_adress);	/*32 bit Internet address network byte ordered*/
 	server_addr.sin_port = htons(SERVER_PORT);		/*server TCP port must be network byte ordered */
     
     #ifdef DEBUG
 	printf("Finished service handling\n");
 	#endif
+
 	/*open an TCP socket*/
 	if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0) {
     		perror("socket()");
-			return 1;
-    	}
+			return -1;
+    }
+
+    ftp->socketfd = sockfd;
 
     #ifdef DEBUG
     printf("Finished opening TCP Socket \n");
     #endif
 	/*connect to the server*/
-    	if(connect(sockfd, 
-	           (struct sockaddr *)&server_addr, 
-		   sizeof(server_addr)) < 0){
+    	if(connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
         	perror("connect()");
-		return 1;
+		return -1;
 	}
    	
    	#ifdef DEBUG
@@ -77,12 +95,26 @@ int ftp_connect(char* server){
    	#endif
 
    	/*send a string to the server*/
-	int bytes = write(sockfd, "cenas", strlen("cenas"));
-	printf("Bytes escritos %d\n", bytes);
+	/*int bytes = write(sockfd, "cenas", strlen("cenas"));
+	printf("Bytes escritos %d\n", bytes);*/
 
 	close(sockfd);
+	return sockfd;
+}
+
+int ftp_login_host(ftp_t* ftp){
 	return 0;
 }
+
+int ftp_delete(ftp_t* ftp){
+	if(close(ftp->socketfd) < 0){
+		printf("Failed to close ftp socket.\n");
+		return -1;
+	}
+	free(ftp);
+	return 0;
+}
+
 
 int main(int argc, char** argv){
 	if(argc != 2){
@@ -90,5 +122,15 @@ int main(int argc, char** argv){
 		return 1;
 	}
 
-	return ftp_connect(argv[1]);
+	ftp_t* ftp = ftp_init(argv[1]);
+	if(ftp == NULL)
+		return -1;
+
+	if(ftp_connect(ftp) < 0)
+		return -1;
+
+	if(ftp_delete(ftp) < 0)
+		return -1;
+
+	return 0;
 }
