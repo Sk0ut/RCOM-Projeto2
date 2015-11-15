@@ -6,6 +6,8 @@
 #define IP_MAX_SIZE	15
 #define OPEN_FILE_FAIL 550
 #define LOGIN_FAIL 530
+#define OPEN_FILE_SUCCESS 150
+#define DATA_PACKET_SIZE 8192
 
 typedef struct {
 	char server_address[IP_MAX_SIZE]; //NNN.NNN.NNN.NNN
@@ -14,6 +16,7 @@ typedef struct {
 	char username[MAX_STRING_SIZE];
 	char password[MAX_STRING_SIZE];
 	char path_to_file[MAX_STRING_SIZE];
+	int file_size;
 } ftp_t;
 
 int getIpAdress(const char* server_addr, char* buf);

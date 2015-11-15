@@ -228,12 +228,10 @@ int ftp_set_passive_mode(ftp_t* ftp){
 int ftp_download_file(ftp_t* ftp){
 
 	char filename[MAX_STRING_SIZE];
-	char buf[MAX_STRING_SIZE];
+	char buf[DATA_PACKET_SIZE];
 	sprintf(filename, "%s", basename(ftp->path_to_file));
 	int bytesRead = 0;
 	int totalBytes = 0;
-
-	printf("Downloading file...\n");
 
 	FILE* file = fopen(filename, "w");
 	if(file == NULL){
@@ -242,6 +240,7 @@ int ftp_download_file(ftp_t* ftp){
 	}
 
 	while((bytesRead = read(ftp->datafd, buf, MAX_STRING_SIZE)) != 0){	
+		printf("Downloading file... %.2f%% complete.\n", (100.0 * totalBytes) / ftp->file_size);
 		if(bytesRead < 0){
 			printf("Error in reading file from server\n");
 			return -1;
@@ -279,6 +278,18 @@ int ftp_retr_file(ftp_t* ftp){
 	if(replyCode == OPEN_FILE_FAIL){ /* Failed to find file */
 		printf("Couldn't find file %s in server.\n", ftp->path_to_file);
 		return -1;
+	}
+	else if(replyCode == OPEN_FILE_SUCCESS){
+		/* Find the file size to export it */
+		char* beg = strrchr(answer,'(');
+		char sizeInfo[MAX_STRING_SIZE];
+		strcpy(sizeInfo, beg);
+		int size;
+		sscanf(sizeInfo, "(%d bytes).", &size);
+		ftp->file_size = size;
+		#ifdef DEBUG
+		printf("DEBUG : Size Info: %d bytes\n", size);
+		#endif
 	}
 
 	#ifdef DEBUG
