@@ -14,24 +14,12 @@
 #include <arpa/inet.h>
 #include <libgen.h>
 
-#define DEBUG
+#include "tcpClient.h"
 
-#define FTP_PORT 21
-#define MAX_STRING_SIZE	255
-#define IP_MAX_SIZE	15
+/* TODO: Perguntar a prof se e preciso fazer o cwd separadamente, visto que nao e necessario */
 
-/* TODO: Isto vai muito provavelmente ser passado para um .h
-	Perguntar a prof se e preciso fazer o cwd separadamente, visto que nao e necessario */
-typedef struct {
-	char server_address[IP_MAX_SIZE]; //NNN.NNN.NNN.NNN
-	int socketfd;
-	int datafd;
-	char username[MAX_STRING_SIZE];
-	char password[MAX_STRING_SIZE];
-	char path_to_file[MAX_STRING_SIZE];
-} ftp_t;
 
-int getIpAdress(char* server_addr, char* buf){
+int getIpAdress(const char* server_addr, char* buf){
 	struct hostent *h;
 
 	 if ((h=gethostbyname(server_addr)) == NULL) 
@@ -48,7 +36,7 @@ int getIpAdress(char* server_addr, char* buf){
     return 0;
 }
 
-ftp_t* ftp_init(char* server, char* username, char* password, char* path_to_file){
+ftp_t* ftp_init(const char* server, const char* username, const char* password, const char* path_to_file){
 	
 	ftp_t* ftp = malloc(sizeof(ftp_t));
 	memset(ftp, 0, sizeof(ftp_t));
@@ -129,7 +117,7 @@ int ftp_connect(ftp_t* ftp){
 	return sockfd;
 }
 
-int ftp_send_command(ftp_t* ftp, char* command, int size){
+int ftp_send_command(ftp_t* ftp, const char* command, const int size){
 	#ifdef DEBUG
 	printf("DEBUG: Sending command %s", command);
 	#endif
@@ -153,7 +141,7 @@ int ftp_send_command(ftp_t* ftp, char* command, int size){
 	return 0;
 }
 
-int ftp_read_answer(ftp_t* ftp, char* answer, int size){	
+int ftp_read_answer(ftp_t* ftp, char* answer, const int size){	
 	int bytesRead;
 	memset(answer, 0, size);
 	bytesRead = read(ftp->socketfd, answer, size);
