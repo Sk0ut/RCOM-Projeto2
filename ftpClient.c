@@ -14,10 +14,9 @@
 #include <arpa/inet.h>
 #include <libgen.h>
 
-#include "tcpClient.h"
+#include "ftpClient.h"
 
 /* TODO: Perguntar a prof se e preciso fazer o cwd separadamente, visto que nao e necessario */
-
 
 int getIpAdress(const char* server_addr, char* buf){
 	struct hostent *h;
@@ -148,7 +147,7 @@ int ftp_read_answer(ftp_t* ftp, char* answer, const int size){
 	#ifdef DEBUG
 	printf("DEBUG: %s", answer);
 	#endif
-	return 0;
+	return bytesRead;
 }
 
 int ftp_login_host(ftp_t* ftp){
@@ -233,12 +232,11 @@ int ftp_download_file(ftp_t* ftp){
 		return -1;
 	}
 
-	while(bytesRead = read(ftp->datafd, buf, MAX_STRING_SIZE)){	
+	while((bytesRead = read(ftp->datafd, buf, MAX_STRING_SIZE)) != 0){	
 		if(bytesRead < 0){
 			printf("Error in reading file from server\n");
 			return -1;
 		}
-		printf("buf: %s\n", buf);
 		totalBytes += bytesRead;
 		if(fwrite(buf,sizeof(char),bytesRead,file) == 0)
 			if(ferror(file) != 0){
@@ -298,38 +296,4 @@ int ftp_disconnect(ftp_t* ftp){
 
 void ftp_delete(ftp_t* ftp){
 	free(ftp);
-}
-
-
-int main(int argc, char** argv){
-	if(argc != 5){
-		printf("Usage: %s <server> <username> <password> <path_to_file>", argv[0]);
-		return 1;
-	}
-
-	ftp_t* ftp = ftp_init(argv[1], argv[2], argv[3], argv[4]);
-	if(ftp == NULL)
-		return 1;
-
-	if(ftp_connect(ftp) < 0)
-		return 1;
-
-	if(ftp_login_host(ftp) < 0)
-		return 1;
-
-	if(ftp_set_passive_mode(ftp) < 0)
-		return 1;
-
-	if(ftp_retr_file(ftp) < 0)
-		return 1;
-
-	if(ftp_download_file(ftp) < 0)
-		return 1;
-
-	if(ftp_disconnect(ftp) < 0)
-		return 1;
-
-	ftp_delete(ftp);
-
-	return 0;
 }

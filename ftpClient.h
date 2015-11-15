@@ -1,3 +1,6 @@
+#ifndef __tcpClient
+#define __tcpClient
+
 #define DEBUG
 #define FTP_PORT 21
 #define MAX_STRING_SIZE	255
@@ -24,3 +27,5 @@ int ftp_download_file(ftp_t* ftp);
 int ftp_retr_file(ftp_t* ftp);
 int ftp_disconnect(ftp_t* ftp);
 void ftp_delete(ftp_t* ftp);
+
+#endif
