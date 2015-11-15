@@ -239,7 +239,7 @@ int ftp_download_file(ftp_t* ftp){
 		return -1;
 	}
 
-	while((bytesRead = read(ftp->datafd, buf, MAX_STRING_SIZE)) != 0){	
+	while((bytesRead = read(ftp->datafd, buf, sizeof(buf))) != 0){	
 		printf("Downloading file... %.2f%% complete.\n", (100.0 * totalBytes) / ftp->file_size);
 		if(bytesRead < 0){
 			printf("Error in reading file from server\n");
