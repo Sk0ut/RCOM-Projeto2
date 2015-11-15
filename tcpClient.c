@@ -12,19 +12,23 @@
 #include <string.h>
 #include <errno.h> 
 #include <arpa/inet.h>
+#include <libgen.h>
 
 #define DEBUG
 
-#define SERVER_PORT 21 /* FTP Port */
+#define FTP_PORT 21
 #define MAX_STRING_SIZE	255
 #define IP_MAX_SIZE	15
 
-/* TODO: Isto vai muito provavelmente ser passado para um .h */
+/* TODO: Isto vai muito provavelmente ser passado para um .h
+	Perguntar a prof se e preciso fazer o cwd separadamente, visto que nao e necessario */
 typedef struct {
-	char server_adress[IP_MAX_SIZE]; //NNN.NNN.NNN.NNN
+	char server_address[IP_MAX_SIZE]; //NNN.NNN.NNN.NNN
 	int socketfd;
+	int datafd;
 	char username[MAX_STRING_SIZE];
 	char password[MAX_STRING_SIZE];
+	char path_to_file[MAX_STRING_SIZE];
 } ftp_t;
 
 int getIpAdress(char* server_addr, char* buf){
@@ -44,58 +48,76 @@ int getIpAdress(char* server_addr, char* buf){
     return 0;
 }
 
-ftp_t* ftp_init(char* server, char* username, char* password){
+ftp_t* ftp_init(char* server, char* username, char* password, char* path_to_file){
 	
 	ftp_t* ftp = malloc(sizeof(ftp_t));
 	memset(ftp, 0, sizeof(ftp_t));
-	char server_adress[IP_MAX_SIZE];
+	char server_address[IP_MAX_SIZE];
 
-	if(getIpAdress(server, server_adress) < 0){
-		printf("Error while resolving adress %s\n", server);
+	if(getIpAdress(server, server_address) < 0){
+		printf("Error while resolving address %s\n", server);
 		return NULL;
 	}
 
-	strcpy(ftp->server_adress, server_adress);
+	strcpy(ftp->server_address, server_address);
 	strcpy(ftp->username, username);
 	strcpy(ftp->password, password);
+	strcpy(ftp->path_to_file, path_to_file);
 
 	return ftp;
 }
 
-int ftp_connect(ftp_t* ftp){
+int ftp_connect_socket(const char* ip, const int port){
 	int	sockfd;
 	struct	sockaddr_in server_addr;
 	
 	#ifdef DEBUG
-	printf("DEBUG: Starting service handling\n");
+	printf("DEBUG: Starting server address handling\n");
 	#endif
 
 	/*server address handling*/
 	memset((char*)&server_addr,0,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(ftp->server_adress);	/*32 bit Internet address network byte ordered*/
-	server_addr.sin_port = htons(SERVER_PORT);		/*server TCP port must be network byte ordered */
+	server_addr.sin_addr.s_addr = inet_addr(ip);	/*32 bit Internet address network byte ordered*/
+	server_addr.sin_port = htons(port);		/*server TCP port must be network byte ordered */
     
     #ifdef DEBUG
 	printf("DEBUG: Finished service handling\n");
 	#endif
 
-	/*open an TCP socket*/
+	/*open a TCP socket*/
 	if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0) {
     		perror("socket()");
 			return -1;
     }
 
-    ftp->socketfd = sockfd;
-
     #ifdef DEBUG
     printf("DEBUG: Finished opening TCP Socket \n");
     #endif
+
+    printf("Connecting to %s:%d\n", ip, port);
 	/*connect to the server*/
-    	if(connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
-        	perror("connect()");
+    if(connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
+        perror("connect()");
 		return -1;
 	}
+
+    #ifdef DEBUG
+	printf("DEBUG: Connected\n");
+	#endif
+
+	return sockfd;
+}
+
+int ftp_connect(ftp_t* ftp){
+	int sockfd = ftp_connect_socket(ftp->server_address, FTP_PORT);
+
+	if(sockfd < 0){
+		printf("Error while connecting to server\n");
+		return -1;
+	}
+
+	ftp->socketfd = sockfd;
 
 	char answer[MAX_STRING_SIZE];
 	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
@@ -104,9 +126,6 @@ int ftp_connect(ftp_t* ftp){
    	printf("DEBUG: Finished connecting to the server\n");
    	#endif
 
-   	/*send a string to the server*/
-	/*int bytes = write(sockfd, "cenas", strlen("cenas"));
-	printf("Bytes escritos %d\n", bytes);*/
 	return sockfd;
 }
 
@@ -128,7 +147,6 @@ int ftp_send_command(ftp_t* ftp, char* command, int size){
 	}
 
 	#ifdef DEBUG
-		command[size-1] = 0;
 		printf("DEBUG: Sent command %s, %d bytes written\n", command, bytesSent);
 	#endif
 
@@ -139,53 +157,191 @@ int ftp_read_answer(ftp_t* ftp, char* answer, int size){
 	int bytesRead;
 	memset(answer, 0, size);
 	bytesRead = read(ftp->socketfd, answer, size);
-	printf("%s", answer);
+	#ifdef DEBUG
+	printf("DEBUG: %s", answer);
+	#endif
 	return 0;
 }
 
 int ftp_login_host(ftp_t* ftp){
 
-	char command[4 + strlen(ftp->username)];
+	char command[6 + strlen(ftp->username)];
 	char answer[MAX_STRING_SIZE];
 
-	sprintf(command,"%s %s\n", "user", ftp->username);
-	ftp_send_command(ftp, command, strlen(command));
-	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
+	sprintf(command,"user %s\n", ftp->username);
+	if(ftp_send_command(ftp, command, strlen(command)) < 0){
+		printf("Error while sending login information\n");
+		return -1;
+	}
+	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
+		printf("Error while receiving answer from login information \n");
+		return -1;
+	}
 
-	sprintf(command,"%s %s\n", "pass", ftp->password);
-	ftp_send_command(ftp, command, strlen(command));
-	ftp_read_answer(ftp, answer, MAX_STRING_SIZE);
+	sprintf(command,"pass %s\n", ftp->password);
+	if(ftp_send_command(ftp, command, strlen(command)) < 0){
+		printf("Error while sending login information\n");
+		return -1;
+	}
+	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
+		printf("Error while receiving answer from login information \n");
+		return -1;
+	}
+
 	return 0;
 }
 
-int ftp_delete(ftp_t* ftp){
+int ftp_set_passive_mode(ftp_t* ftp){
+	char answer[MAX_STRING_SIZE];
+	int ip1, ip2, ip3, ip4;
+	int port1, port2;
+	if(ftp_send_command(ftp, "pasv\n", strlen("pasv\n")) < 0){
+		printf("Error while switching to passive mode\n");
+		return -1;
+	}
+	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
+		printf("Error while receiving answer from switching to passive mode \n");
+		return -1;
+	}
+
+	#ifdef DEBUG
+		printf("%s", answer);
+	#endif
+
+	if ((sscanf(answer, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)", &ip1, &ip2, &ip3, &ip4, &port1, &port2)) < 0){
+		printf("Error while parsing pasv answer from the server.\n");
+		return -1;
+	}
+
+	char ip[15];
+	int port = 256*port1+port2;
+	sprintf(ip, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+
+	#ifdef DEBUG
+	printf("IP: %s Port: %d\n", ip, port);
+	#endif
+
+	int datafd = ftp_connect_socket(ip, port);
+	if(datafd < 0){
+		printf("Error while connecting to data socket\n");
+		return -1;
+	}
+
+	ftp->datafd = datafd;
+	return 0;
+}
+
+int ftp_download_file(ftp_t* ftp){
+
+	char filename[MAX_STRING_SIZE];
+	char buf[MAX_STRING_SIZE];
+	sprintf(filename, "%s", basename(ftp->path_to_file));
+	int bytesRead = 0;
+	int totalBytes = 0;
+
+	FILE* file = fopen(filename, "w");
+	if(file == NULL){
+		printf("Couldn't open file %s for writing\n", filename);
+		return -1;
+	}
+
+	while(bytesRead = read(ftp->datafd, buf, MAX_STRING_SIZE)){	
+		if(bytesRead < 0){
+			printf("Error in reading file from server\n");
+			return -1;
+		}
+		printf("buf: %s\n", buf);
+		totalBytes += bytesRead;
+		if(fwrite(buf,sizeof(char),bytesRead,file) == 0)
+			if(ferror(file) != 0){
+				printf("Error in writing to file %s\n", filename);
+				return -1;
+			}
+	}
+
+	fclose(file);
+	return totalBytes;
+}
+
+int ftp_retr_file(ftp_t* ftp){
+	char command[6+strlen(ftp->path_to_file)];
+	char answer[MAX_STRING_SIZE];
+	sprintf(command, "retr %s\n", ftp->path_to_file);
+
+	if(ftp_send_command(ftp, command, 6+strlen(ftp->path_to_file)) < 0){
+		printf("Error in requesting file from server\n");
+		return -1;
+	}
+	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
+		printf("Error in reading answer from file request from server\n");
+		return -1;
+	}
+
+	#ifdef DEBUG
+		printf("%s\n", answer);
+	#endif
+
+	return 0;
+}
+
+int ftp_disconnect(ftp_t* ftp){
+	char answer[MAX_STRING_SIZE];
+	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
+		printf("Error in disconnecing account\n");
+		return -1;
+	}
+
+	if(ftp_send_command(ftp, "quit\n", strlen("quit\n")) < 0){
+		printf("Error in sending quit command\n");
+		return -1;
+	}
+
 	if(close(ftp->socketfd) < 0){
 		printf("Failed to close ftp socket.\n");
 		return -1;
 	}
-	free(ftp);
+
+	if(close(ftp->datafd) < 0){
+		printf("Failed to close ftp data socket.\n");
+		return -1;
+	}
 	return 0;
+}
+
+void ftp_delete(ftp_t* ftp){
+	free(ftp);
 }
 
 
 int main(int argc, char** argv){
-	if(argc != 4){
-		printf("Usage: %s <server> <username> <password>", argv[0]);
+	if(argc != 5){
+		printf("Usage: %s <server> <username> <password> <path_to_file>", argv[0]);
 		return 1;
 	}
 
-	ftp_t* ftp = ftp_init(argv[1], argv[2], argv[3]);
+	ftp_t* ftp = ftp_init(argv[1], argv[2], argv[3], argv[4]);
 	if(ftp == NULL)
-		return -1;
+		return 1;
 
 	if(ftp_connect(ftp) < 0)
-		return -1;
+		return 1;
 
 	if(ftp_login_host(ftp) < 0)
-		return -1;
+		return 1;
 
-	if(ftp_delete(ftp) < 0)
-		return -1;
+	if(ftp_set_passive_mode(ftp) < 0)
+		return 1;
+
+	if(ftp_retr_file(ftp) < 0)
+		return 1;
+
+	if(ftp_download_file(ftp) < 0)
+		return 1;
+
+	if(ftp_disconnect(ftp) < 0)
+		return 1;
+
+	ftp_delete(ftp);
 
 	return 0;
 }
