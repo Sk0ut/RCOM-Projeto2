@@ -1,10 +1,11 @@
 #ifndef __tcpClient
 #define __tcpClient
 
-#define DEBUG
 #define FTP_PORT 21
 #define MAX_STRING_SIZE	255
 #define IP_MAX_SIZE	15
+#define OPEN_FILE_FAIL 550
+#define LOGIN_FAIL 530
 
 typedef struct {
 	char server_address[IP_MAX_SIZE]; //NNN.NNN.NNN.NNN

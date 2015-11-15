@@ -1,5 +1,3 @@
-/*      (C)2000 FEUP  */
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -175,6 +173,15 @@ int ftp_login_host(ftp_t* ftp){
 		return -1;
 	}
 
+	int replyCode;
+	sscanf(answer, "%d", &replyCode);
+	if(replyCode == LOGIN_FAIL){ /* Failed to login */
+		printf("Wrong username/password combination.\n");
+		return -1;
+	}
+
+	printf("Logged in to server %s.\n",ftp->server_address);
+
 	return 0;
 }
 
@@ -226,6 +233,8 @@ int ftp_download_file(ftp_t* ftp){
 	int bytesRead = 0;
 	int totalBytes = 0;
 
+	printf("Downloading file...\n");
+
 	FILE* file = fopen(filename, "w");
 	if(file == NULL){
 		printf("Couldn't open file %s for writing\n", filename);
@@ -244,7 +253,7 @@ int ftp_download_file(ftp_t* ftp){
 				return -1;
 			}
 	}
-
+	printf("File downloaded	\n");
 	fclose(file);
 	return totalBytes;
 }
@@ -254,12 +263,21 @@ int ftp_retr_file(ftp_t* ftp){
 	char answer[MAX_STRING_SIZE];
 	sprintf(command, "retr %s\n", ftp->path_to_file);
 
+	printf("Requesting file %s\n",basename(ftp->path_to_file));
+
 	if(ftp_send_command(ftp, command, 6+strlen(ftp->path_to_file)) < 0){
 		printf("Error in requesting file from server\n");
 		return -1;
 	}
 	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
 		printf("Error in reading answer from file request from server\n");
+		return -1;
+	}
+
+	int replyCode;
+	sscanf(answer, "%d", &replyCode);
+	if(replyCode == OPEN_FILE_FAIL){ /* Failed to find file */
+		printf("Couldn't find file %s in server.\n", ftp->path_to_file);
 		return -1;
 	}
 
@@ -273,7 +291,7 @@ int ftp_retr_file(ftp_t* ftp){
 int ftp_disconnect(ftp_t* ftp){
 	char answer[MAX_STRING_SIZE];
 	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
-		printf("Error in disconnecing account\n");
+		printf("Error in disconnecing from server\n");
 		return -1;
 	}
 
@@ -291,6 +309,8 @@ int ftp_disconnect(ftp_t* ftp){
 		printf("Failed to close ftp data socket.\n");
 		return -1;
 	}
+
+	printf("Disconnected from server.\n");
 	return 0;
 }
 

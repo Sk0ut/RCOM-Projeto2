@@ -21,6 +21,7 @@ int validateURL(char* url, int size){
 	reti = regcomp(&regex, regex_auth, REG_EXTENDED);
 	if (reti) {
 		regerror(reti, &regex, regcomp_err, sizeof(regcomp_err));
+	    printf("Error while validating URL\n");
 	    printf("Error while compiling regex: %s\n",regcomp_err);
 	    return -1;
 	}
@@ -41,7 +42,8 @@ int validateURL(char* url, int size){
 	}
 	else {
 	    regerror(reti, &regex, regcomp_err, sizeof(regcomp_err));
-	    printf("Error while validating regex: %s\n", regcomp_err);
+	    printf("Error while validating URL: %s\n", regcomp_err);
+	    printf("Error while validating URL: %s\n", regcomp_err);
 	    return -1;
 	}
 
