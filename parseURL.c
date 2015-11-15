@@ -8,7 +8,6 @@
 
 
 int validateURL(char* url, int size){
-	/* TODO: Discutir com o Flavio se nao me enganei a fazer esta expressao regular */
 	/* Notas: 	As passwords/usernames do sigarra apenas contem letras e numeros
 				Fonte para os carateres autorizados num URL: http://stackoverflow.com/questions/7109143/what-characters-are-valid-in-a-url 
 				Nao inclui o % no URL porque a trabalheira que ia ser parsar todos os url-encodes, mais valia nem usar regex */
@@ -42,8 +41,10 @@ int validateURL(char* url, int size){
 	}
 	else {
 	    regerror(reti, &regex, regcomp_err, sizeof(regcomp_err));
-	    printf("Error while validating URL: %s\n", regcomp_err);
-	    printf("Error while validating URL: %s\n", regcomp_err);
+	    printf("Error while validating URL:\n");
+	   	#ifdef DEBUG
+	    printf("DEBUG: Error while matching regex: %s\n", regcomp_err);
+	    #endif
 	    return -1;
 	}
 
