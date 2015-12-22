@@ -14,8 +14,6 @@
 
 #include "ftpClient.h"
 
-/* TODO: Perguntar a prof se e preciso fazer o cwd separadamente, visto que nao e necessario */
-
 int getIpAdress(const char* server_addr, char* buf){
 	struct hostent *h;
 
@@ -116,10 +114,12 @@ int ftp_connect(ftp_t* ftp){
 
 int ftp_send_command(ftp_t* ftp, const char* command, const int size){
 	#ifdef DEBUG
-	printf("DEBUG: Sending command %s", command);
+	printf("DEBUG: Sending command %s with size %d\n", command, size);
 	#endif
 
 	int bytesSent = write(ftp->socketfd, command, size);
+
+	printf("Sent command \n");
 
 	if(bytesSent <= 0){
 		printf("Error while sending command to server (no information sent)\n");
@@ -164,10 +164,12 @@ int ftp_login_host(ftp_t* ftp){
 	}
 
 	sprintf(command,"pass %s\n", ftp->password);
+
 	if(ftp_send_command(ftp, command, strlen(command)) < 0){
 		printf("Error while sending login information\n");
 		return -1;
 	}
+	printf("Chega aqui");
 	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
 		printf("Error while receiving answer from login information \n");
 		return -1;

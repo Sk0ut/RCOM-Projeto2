@@ -9,7 +9,9 @@
 #endif
 
 void printUsage(){
-	printf("Usage: download ftp://[<user>:<password>@]<host>/<url-path>\n");
+	printf("Usage: Normal: download ftp://<user>:<password>@<host>/<url-path>\n");
+	printf("Usage: Anon: download ftp://<host>/<url-path>\n");
+
 }
 
 int main(int argc, char** argv){
@@ -19,20 +21,24 @@ int main(int argc, char** argv){
 	}
 
 	int val = validateURL(argv[1], sizeof(argv[1]));
-
-	if(val != 0){
-		if(val == 1)
-			printUsage();
-		return 1;
-	}
-
-	char host[MAX_STRING_SIZE];
+	int anon = 1;
 	char user[MAX_STRING_SIZE];
 	char password[MAX_STRING_SIZE];
+	char host[MAX_STRING_SIZE];
 	char path[MAX_STRING_SIZE];
-
-	parseURL(argv[1], sizeof(argv[1]), host, user, password, path);
-
+	switch(val){
+		case 0:
+			anon = 0;
+		case 1:
+			parseURL(argv[1], sizeof(argv[1]), host, user, password, path, anon);
+			break;
+		case 2:
+			printUsage();
+			break;
+		default:
+			return -1;
+	}
+	
 	ftp_t* ftp = ftp_init(host, user, password, path);
 	if(ftp == NULL)
 		return 1;
