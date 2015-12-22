@@ -34,11 +34,11 @@ int main(int argc, char** argv){
 			break;
 		case 2:
 			printUsage();
-			break;
+			return 1;
 		default:
-			return -1;
+			return 1;
 	}
-	
+
 	ftp_t* ftp = ftp_init(host, user, password, path);
 	if(ftp == NULL)
 		return 1;

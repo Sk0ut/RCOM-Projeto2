@@ -113,7 +113,8 @@ void parseURL(char* url, int size, char* host, char* user, char* password, char*
 
 	else {
 		strncpy(user, "anonymous", sizeof("anonymous"));
-		strncpy(password, "up201304205@fe.up.pt", sizeof("up201304205@@fe.up.pt"));
+		printf("Please specify your email address for authentication: ");
+		scanf("%s", password);
 	}
 
 	char* end = strchr(beg, '/');
