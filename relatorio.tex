@@ -238,6 +238,24 @@ After the setup, we used Wireshark and tryed to ping Tux2 and Tux4  from Tux1 bu
 
 Next we started Wireshark in all the machines and made a ping broadcast to IP 172.16.50.255 from Tux1. Tux4 replied, but not Tux2. Then we made a ping broadcast to IP 172.16.51.255 from Tux2. This time none of the other machines replied. With this we can conclude that there are 2 broadcast domains.
 
+\subsection{Experience 3 - Configure a router in Linux}
+
+This experience consisted in making one of the Tux machines into a router, connecting the two networks created previously.
+
+For this, tux4 eth1 interface was assigned the IP address 172.16.51.253/24, connected to port Fa 0/5 on the switch and added to vlan51. Then a route was added on tux2 to reach the network 172.16.50.0/24 through gateway 172.16.51.253.
+
+These configurations allowed communication between the 3 tux machines, which we tested with some ping commands that generated some more ARP,  ICMP Echo and ICMP Echo Reply packets.
+
+Each one of the tux machines as a forwarding table which contains information about a destination network, the gateway to reach it (which is the next hop on the connection), the interface associated with it and a metric, which evaluates the efficiency of a route.
+
+Tux1 has 2 routes on its table: the route to network 172.16.50.0/24, which it has direct access through eth0, and a route to all the other networks with 172.16.50.254 as the gateway, making it tux1 default gateway.
+
+Tux2 has 2 routes on its table: the route to network 172.16.51.0/24, which it has direct access through eth0, and a route to 172.16.50.0/24 with 172.16.51.253 as the gateway.
+
+Tux3 also has 2 routes on its table: the route to network 172.16.50.0/24, which it has direct access through eth0, and the route throught 172.16.51.0/24, which it has direct access through eth1.
+
+When pinging tux2 from tux1, the packet traveling in 172.16.50.0/24 has source IP and MAC address corresponding to tux1 eth0 but, although its destination IP address is tux2 eth0’s IP address, the MAC address is tux4 eth0’s IP address. This packet is then received by tux4 which forwards it to tux2, but it changes the source MAC to tux4 eth1’s MAC and the destination MAC to tux2 eth0’s MAC. A similar operation happens with packets travelling to tux1 from tux2, as expected.
+
 \subsection{Experience 4 - Configure a Commercial Router and Implement NAT}
 
 In order to do so, the router gigabitethernet 0/0 interface was assigned IP address 172.16.51.254/24 and was connected to the switch port Gi 0/1, which was added to vlan51. Then router gigabitethernet 0/1 interface was assigned IP address 172.16.1.59/24 and connected to the lab network. After that we made 172.16.51.254 the default gateway for tux4 and tux2 and added a route on the router for network 172.16.50.0/24 using 172.16.51.253 as the gateway. With these configurations we were able to ping all the network interfaces of tux4, tux2 and the router from tux1.
