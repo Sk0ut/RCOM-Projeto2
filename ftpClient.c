@@ -119,8 +119,6 @@ int ftp_send_command(ftp_t* ftp, const char* command, const int size){
 
 	int bytesSent = write(ftp->socketfd, command, size);
 
-	printf("Sent command \n");
-
 	if(bytesSent <= 0){
 		printf("Error while sending command to server (no information sent)\n");
 		return -1;
@@ -169,7 +167,7 @@ int ftp_login_host(ftp_t* ftp){
 		printf("Error while sending login information\n");
 		return -1;
 	}
-	printf("Chega aqui");
+
 	if(ftp_read_answer(ftp, answer, MAX_STRING_SIZE) < 0){
 		printf("Error while receiving answer from login information \n");
 		return -1;

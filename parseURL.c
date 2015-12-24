@@ -6,44 +6,7 @@
 #include "ftpClient.h"
 #include "parseURL.h"
 
-
-int validateURL(char* url, int size){
-	regex_t regex;
-	char* regex_auth = "ftp://[A-Za-z0-9]+:[A-Za-z0-9]+@[A-Za-z0-9._~:?#!$&'()*+,:;=-]+/[A-Za-z0-9._~:/?#@!$&'()*+,:;=-]+";
-	char regcomp_err[255];
-
-	/* Compile regex */
-	int reti = regcomp(&regex, regex_auth, REG_EXTENDED);
-	if (reti) {
-		regerror(reti, &regex, regcomp_err, sizeof(regcomp_err));
-	    printf("Error while validating URL\n");
-	    printf("Error while compiling regex: %s\n",regcomp_err);
-	    return -1;
-	}
-
-	/* Execute regex */
-	reti = regexec(&regex, url, 0, NULL, 0);
-
-	/* Validate regex */
-	if (!reti) {
-	    #ifdef DEBUG
-	    printf("DEBUG: Regex matched sucessfully\n");
-	    #endif
-	    return 0;
-	}
-	else if (reti == REG_NOMATCH) {
-	    return validateURLAnon(url, size);
-	}
-	else {
-	    regerror(reti, &regex, regcomp_err, sizeof(regcomp_err));
-	    printf("Error while validating URL: %s\n", regcomp_err);
-	   	#ifdef DEBUG
-	    printf("DEBUG: Error while matching regex: %s\n", regcomp_err);
-	    #endif
-	    return -1;
-	}
-
-}
+int validateURLAnon(char* url, int size);
 
 int validateURLAnon(char* url, int size){
 	regex_t regex;
@@ -81,6 +44,44 @@ int validateURLAnon(char* url, int size){
 	    #endif
 	    return -1;
 	}
+}
+
+int validateURL(char* url, int size){
+	regex_t regex;
+	char* regex_auth = "ftp://[A-Za-z0-9]+:[A-Za-z0-9]+@[A-Za-z0-9._~:?#!$&'()*+,:;=-]+/[A-Za-z0-9._~:/?#@!$&'()*+,:;=-]+";
+	char regcomp_err[255];
+
+	/* Compile regex */
+	int reti = regcomp(&regex, regex_auth, REG_EXTENDED);
+	if (reti) {
+		regerror(reti, &regex, regcomp_err, sizeof(regcomp_err));
+	    printf("Error while validating URL\n");
+	    printf("Error while compiling regex: %s\n",regcomp_err);
+	    return -1;
+	}
+
+	/* Execute regex */
+	reti = regexec(&regex, url, 0, NULL, 0);
+
+	/* Validate regex */
+	if (!reti) {
+	    #ifdef DEBUG
+	    printf("DEBUG: Regex matched sucessfully\n");
+	    #endif
+	    return 0;
+	}
+	else if (reti == REG_NOMATCH) {
+	    return validateURLAnon(url, size);
+	}
+	else {
+	    regerror(reti, &regex, regcomp_err, sizeof(regcomp_err));
+	    printf("Error while validating URL: %s\n", regcomp_err);
+	   	#ifdef DEBUG
+	    printf("DEBUG: Error while matching regex: %s\n", regcomp_err);
+	    #endif
+	    return -1;
+	}
+
 }
 
 void parseURL(char* url, int size, char* host, char* user, char* password, char* path, int anon){

@@ -8,7 +8,7 @@
 #define LOGIN_FAIL 530
 #define OPEN_FILE_SUCCESS 150
 #define DATA_PACKET_SIZE 8192
-#define DEBUG
+//#define DEBUG
 
 typedef struct {
 	char server_address[IP_MAX_SIZE]; //NNN.NNN.NNN.NNN
