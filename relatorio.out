@@ -13,4 +13,10 @@
 \BOOKMARK [2][-]{subsection.3.6}{Experience 6 - TCP Connection}{section.3}% 13
 \BOOKMARK [1][-]{section.4}{Conclusion}{}% 14
 \BOOKMARK [1][-]{section*.4}{Appendices}{}% 15
-\BOOKMARK [1][-]{Appendix.A}{Source code}{}% 16
+\BOOKMARK [1][-]{Appendix.A}{Application Source code}{}% 16
+\BOOKMARK [1][-]{Appendix.B}{Configuration commands}{}% 17
+\BOOKMARK [2][-]{subsection.B.1}{Configure an IP network}{Appendix.B}% 18
+\BOOKMARK [2][-]{subsection.B.2}{Implement two virtual LANs in a switch}{Appendix.B}% 19
+\BOOKMARK [2][-]{subsection.B.3}{Configure a router in Linux}{Appendix.B}% 20
+\BOOKMARK [2][-]{subsection.B.4}{Configure a router in Linux}{Appendix.B}% 21
+\BOOKMARK [2][-]{subsection.B.5}{DNS}{Appendix.B}% 22

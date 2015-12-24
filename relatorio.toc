@@ -1,16 +1,22 @@
-\contentsline {section}{\numberline {1}Introduction}{2}{section.1}
-\contentsline {section}{\numberline {2}FTP Client}{2}{section.2}
-\contentsline {subsection}{\numberline {2.1}Architecture of the download application}{2}{subsection.2.1}
-\contentsline {subsubsection}{\numberline {2.1.1}The URL Parsing Module}{3}{subsubsection.2.1.1}
-\contentsline {subsubsection}{\numberline {2.1.2}The FTP Client Module}{3}{subsubsection.2.1.2}
-\contentsline {subsection}{\numberline {2.2}Report of a successful download}{4}{subsection.2.2}
-\contentsline {section}{\numberline {3}Network Configuration and Analysis}{6}{section.3}
-\contentsline {subsection}{\numberline {3.1}Experience 1 - Configure an IP network}{6}{subsection.3.1}
-\contentsline {subsection}{\numberline {3.2}Experience 2 - Implement two virtual LANs in a switch}{6}{subsection.3.2}
-\contentsline {subsection}{\numberline {3.3}Experience 3 - Configure a router in Linux}{7}{subsection.3.3}
-\contentsline {subsection}{\numberline {3.4}Experience 4 - Configure a Commercial Router and Implement NAT}{7}{subsection.3.4}
-\contentsline {subsection}{\numberline {3.5}Experience 5 - DNS}{8}{subsection.3.5}
-\contentsline {subsection}{\numberline {3.6}Experience 6 - TCP Connection}{8}{subsection.3.6}
-\contentsline {section}{\numberline {4}Conclusion}{9}{section.4}
-\contentsline {section}{Appendices}{10}{section*.4}
-\contentsline {section}{\numberline {A}Source code}{10}{Appendix.A}
+\contentsline {section}{\numberline {1}Introduction}{3}{section.1}
+\contentsline {section}{\numberline {2}FTP Client}{3}{section.2}
+\contentsline {subsection}{\numberline {2.1}Architecture of the download application}{3}{subsection.2.1}
+\contentsline {subsubsection}{\numberline {2.1.1}The URL Parsing Module}{4}{subsubsection.2.1.1}
+\contentsline {subsubsection}{\numberline {2.1.2}The FTP Client Module}{4}{subsubsection.2.1.2}
+\contentsline {subsection}{\numberline {2.2}Report of a successful download}{5}{subsection.2.2}
+\contentsline {section}{\numberline {3}Network Configuration and Analysis}{7}{section.3}
+\contentsline {subsection}{\numberline {3.1}Experience 1 - Configure an IP network}{7}{subsection.3.1}
+\contentsline {subsection}{\numberline {3.2}Experience 2 - Implement two virtual LANs in a switch}{7}{subsection.3.2}
+\contentsline {subsection}{\numberline {3.3}Experience 3 - Configure a router in Linux}{8}{subsection.3.3}
+\contentsline {subsection}{\numberline {3.4}Experience 4 - Configure a Commercial Router and Implement NAT}{8}{subsection.3.4}
+\contentsline {subsection}{\numberline {3.5}Experience 5 - DNS}{9}{subsection.3.5}
+\contentsline {subsection}{\numberline {3.6}Experience 6 - TCP Connection}{9}{subsection.3.6}
+\contentsline {section}{\numberline {4}Conclusion}{10}{section.4}
+\contentsline {section}{Appendices}{11}{section*.4}
+\contentsline {section}{\numberline {A}Application Source code}{11}{Appendix.A}
+\contentsline {section}{\numberline {B}Configuration commands}{30}{Appendix.B}
+\contentsline {subsection}{\numberline {B.1}Configure an IP network}{30}{subsection.B.1}
+\contentsline {subsection}{\numberline {B.2}Implement two virtual LANs in a switch}{30}{subsection.B.2}
+\contentsline {subsection}{\numberline {B.3}Configure a router in Linux}{31}{subsection.B.3}
+\contentsline {subsection}{\numberline {B.4}Configure a router in Linux}{31}{subsection.B.4}
+\contentsline {subsection}{\numberline {B.5}DNS}{32}{subsection.B.5}
