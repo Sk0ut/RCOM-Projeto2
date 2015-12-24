@@ -96,7 +96,7 @@
 {\Huge \bfseries Configuration of a network and development of download application \\[1cm]}
 
 % Author
-{\large Flávio Couto, João Gouveia e Pedro Afonso Castro}\\[2cm]
+{\large Flávio Couto, João Gouveia and Pedro Afonso Castro}\\[2cm]
 
 \includegraphics[width=10cm]{feup_logo.jpg}\\[2cm]
 
@@ -223,11 +223,12 @@ The first test results can be seen in Fig. \ref{fig:authconnection} and the seco
 
 \subsection{Experience 1 - Configure an IP network}
 
-This experience’s objective was to configure a machine network interface IP address and study ARP and ICMP packets. In order to do that Tux1 eth0 interface was assigned the IP adress 172.16.50.1/24 and Tux4 eth0 interface was assigned the IP address 172.16.50.254/24 and IP address 172.16.50.254 was assigned as the default gateway for Tux1. Both interfaces were connected to the default vlan on the switch (Tux1 eth0 in port Fa 0/1, Tux4 eth0 in port Fa 0/4).
+This experience’s objective was to configure a machine network interface IP address and study ARP and ICMP packets. In order to do that Tux1 eth0 interface was assigned the IP adress 172.16.50.1/24 and Tux4 eth0 interface was assigned the IP address 172.16.50.254/24. Both interfaces were connected to the default vlan on the switch (Tux1 eth0 in port Fa 0/1, Tux4 eth0 in port Fa 0/4).
 
 After configuring the network we issued a ping to 172.16.50.254 from Tux1. It generate an ARP packet in order to discover the MAC address whose IP was the requested one. Tux4 replied to Tux1 with its MAC address. After that, an ICMP Echo packet was issued from Tux1 having its MAC and IP as source and having Tux4 MAC and IP as destination. Upon receiving this packet, Tux4 issued an ICMP Echo Reply as response with its MAC and IP as source and Tux1 MAC and IP as destination. By capturing the internet packets navigating through Tux1 eth0 with the Wireshark software we can analyse them in order to inspect their contents and obtain informations such as its ethernet type in the ethernet header, which allows us to distinguish between ARP (0x0806) and IP (0x0800) packects, its IP protocol in the IP header protocol field, which is 1 for ICMP packets, and the length of the receiving frame, which is also in a field of the IP datagram header.
 
 Although it was already configured, the loopback interface is also one of the machine’s network interfaces. It is a virtual network interface that the machine uses to communicate with itself. It is used mainly for diagnostics and troubleshooting, and to connect to servers running on the local machine.
+
 
 \subsection{Experience 2 - Implement two virtual LANs in a switch}
 
@@ -242,12 +243,11 @@ Next we started Wireshark in all the machines and made a ping broadcast to IP 17
 
 This experience consisted in making one of the Tux machines into a router, connecting the two networks created previously.
 
-For this, tux4 eth1 interface was assigned the IP address 172.16.51.253/24, connected to port Fa 0/5 on the switch and added to vlan51. Then a route was added on tux2 to reach the network 172.16.50.0/24 through gateway 172.16.51.253.
+For this, tux4 eth1 interface was assigned the IP address 172.16.51.253/24, connected to port Fa 0/5 on the switch and added to vlan51. Then a route was added on tux2 to reach the network 172.16.50.0/24 through gateway 172.16.51.253 and the ip address 172.16.50.254 was assigned as tux1 default gateway.
 
 These configurations allowed communication between the 3 tux machines, which we tested with some ping commands that generated some more ARP,  ICMP Echo and ICMP Echo Reply packets.
 
 Each one of the tux machines as a forwarding table which contains information about a destination network, the gateway to reach it (which is the next hop on the connection), the interface associated with it and a metric, which evaluates the efficiency of a route.
-
 Tux1 has 2 routes on its table: the route to network 172.16.50.0/24, which it has direct access through eth0, and a route to all the other networks with 172.16.50.254 as the gateway, making it tux1 default gateway.
 
 Tux2 has 2 routes on its table: the route to network 172.16.51.0/24, which it has direct access through eth0, and a route to 172.16.50.0/24 with 172.16.51.253 as the gateway.
@@ -295,7 +295,7 @@ All in all, we all consider the group's objectives were successfully completed.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % APENDICE - CODIGO FONTE %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Source code}
+\section{Application Source code}
 
 \begin{Large}
 ftpClient.c:
@@ -344,6 +344,151 @@ Makefile:
 \lstinputlisting{Makefile}
 
 \vspace{15mm}
+
+\section{Configuration commands}
+
+\subsection{Configure an IP network}
+
+On tux1:
+\begin{itemize}[label=-]
+\item ifconfig eth0 up
+\item ifconfig eth0 172.16.50.1/24
+\end{itemize}
+
+On tux4:
+\begin{itemize}[label=-]
+\item ifconfig eth0 up
+\item ifconfig eth0 172.16.50.254/24
+\end{itemize}
+
+\subsection{Implement two virtual LANs in a switch}
+
+On tux2:
+\begin{itemize}[label=-]
+\item ifconfig eth0 up
+\item ifconfig eth0 172.16.51.1/24
+\end{itemize}
+
+On switch:
+\begin{itemize}[label=-]
+\item configure terminal
+\item vlan 50
+\item exit
+\item vlan 51
+\item exit
+\item interface fastethernet 0/1
+\item switchport mode access
+\item switchport access vlan 50
+\item exit
+\item interface fastethernet 0/2
+\item switchport mode access
+\item switchport access vlan 51
+\item exit
+\item interface fastethernet 0/4
+\item switchport mode access
+\item switchport access vlan 50
+\item exit
+\item end
+\end{itemize}
+
+\subsection{Configure a router in Linux}
+
+On tux1:
+\begin{itemize}[label=-]
+\item route add default gw 172.16.50.254
+\end{itemize}
+
+On tux2:
+
+\begin{itemize}[label=-]
+\item route add -net 172.16.50.0/24 gw 172.16.51.253
+\end{itemize}
+
+On tux4:
+
+\begin{itemize}[label=-]
+\item ifconfig eth1 up
+\item ifconfig eth1 172.16.51.253/24
+\item echo 1 > /proc/sys/net/ipv4/ip\textunderscore forward
+\item echo 0 > /proc/sys/net/ipv4/icmp\textunderscore echo\textunderscore ignore\textunderscore broadcasts
+\end{itemize}
+
+On switch:
+
+\begin{itemize}[label=-]
+\item configure terminal
+\item interface fastethernet 0/5
+\item switchport mode access
+\item switchport access vlan 51
+\item exit
+\item end
+\end{itemize}
+
+\subsection{Configure a router in Linux}
+
+On tux2 and tux4:
+
+\begin{itemize}[label=-]
+\item route add default gw 172.16.51.254
+\end{itemize}
+
+On switch:
+
+\begin{itemize}[label=-]
+\item configure terminal
+\item interface gigabitethernet 0/1
+\item switchport mode access
+\item switchport access vlan 51
+\item exit
+\item end
+\end{itemize}
+
+On router:
+
+\begin{itemize}[label=-]
+\item configure terminal
+\item interface gigabitEthernet 0/0
+\item ip address 172.16.51.254 255.255.255.0
+\item no shutdown
+\item ip nat inside
+\item exit
+\item interface gigabitEthernet 0/1
+\item ip address 172.16.1.59 255.255.255.0
+\item no shutdown
+\item ip nat outside
+\item exit
+\item ip nat pool ovrld 172.16.1.59 172.16.1.59 prefix 24
+\item ip nat inside source list 1 pool ovrld overload
+\item access-list 1 permit 172.16.50.0 0.0.0.255
+\item access-list 1 permit 172.16.51.0 0.0.0.255
+\item ip route 0.0.0.0 0.0.0.0 172.16.1.254
+\item ip route 172.16.50.0 255.255.255.0 172.16.51.253
+\item end
+\end{itemize}
+
+Disable tux2 redirection acceptance:
+
+\begin{itemize}[label=-]
+\item echo 0 > /proc/sys/net/ipv4/conf/eth0/accept\textunderscore redirects
+\item echo 0 > /proc/sys/net/ipv4/conf/all/accept\textunderscore redirects 
+\end{itemize}
+
+Enable tux2 redirection acceptance:
+
+\begin{itemize}[label=-]
+\item echo 1 > /proc/sys/net/ipv4/conf/eth0/accept\textunderscore redirects
+\item echo 1 > /proc/sys/net/ipv4/conf/all/accept\textunderscore redirects
+\end{itemize}
+
+\subsection{DNS}
+
+On tux1, tux2 and tux4 replace /etc/resolv.conf with:
+
+\begin{itemize}[label=-]
+\item search netlab.fe.up.pt
+\item nameserver 172.16.1.1
+\end{itemize}
+
 
 \end{appendices}
 
